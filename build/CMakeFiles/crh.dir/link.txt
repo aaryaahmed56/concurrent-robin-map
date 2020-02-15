@@ -1,2 +1,0 @@
-/bin/ar qc libcrh.a  CMakeFiles/crh.dir/crh.cpp.o
-/bin/ranlib libcrh.a
