@@ -11,7 +11,6 @@ namespace constraints
 
     template< class T > struct is_set : std::true_type {};
     template<> struct is_set<unit> : std::false_type {};
-    using is_nil_set = typename constraints::is_set<unit>;
 
     template< class... Args >
     struct pack;
@@ -71,6 +70,5 @@ namespace constraints
     using value_param_t = value_param<ValueType, Policy, pack<Args...>, Default>;
 } // namespace constraints
 } // namespace crh
-
 
 #endif // !CRH_TYPE_CONSTRAINTS_HPP
