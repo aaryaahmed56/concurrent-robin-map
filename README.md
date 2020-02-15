@@ -8,7 +8,7 @@ maintaining as much faithfulness as possible to the `std::unordered_map` interfa
 
 <table style="border:0px">
 <tr>
-    <td valign="top"><a name="ref-brown-2015"></a>[KPM2018]</td>
+    <td valign="top"><a name="ref-kelley-pearlmutter-maguire-2018"></a>[KPM2018]</td>
     <td>Robert Kelley, Barak A. Pearlmutter, and Phil Maguire.
     <a href=https://arxiv.org/pdf/1809.04339.pdf>
     Concurrent Robin Hood Hashing</a>.
