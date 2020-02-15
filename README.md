@@ -1,7 +1,7 @@
 # concurrent-robin-map
 
 A C++ library implementing a hash map designed with concurrent robin hood hashing, as detailed in
-a [paper](https://arxiv.org/pdf/1911.03028.pdf) by Kelley, Pearlmutter, and Maguire, while
+a [paper](https://arxiv.org/pdf/1809.04339.pdf) by Kelley, Pearlmutter, and Maguire, while
 maintaining as much faithfulness as possible to the `std::unordered_map` interface.
 
 ## References
