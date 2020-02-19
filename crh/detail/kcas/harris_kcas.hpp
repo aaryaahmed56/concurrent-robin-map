@@ -33,7 +33,8 @@ namespace crh
          * 
          * @tparam word_t A word of specified bit size
          */
-        template< typename word_t >
+        template<typename word_t,
+                 typename addr_t >
         class rdcss_descriptor
         {
         private:
@@ -46,7 +47,7 @@ namespace crh
 
         public:
             rdcss_descriptor() {}
-            
+
             rdcss_descriptor(const rdcss_descriptor&) = default;
             rdcss_descriptor &operator=(const rdcss_descriptor&) = default;
 
@@ -93,35 +94,77 @@ namespace crh
                 return r;
             }
 
+            word_t read(std::unique_ptr<addr_t> addr)
+            {
+                word_t r;
+                do
+                {
+                    r = std::atomic_load<addr_t>(addr.get);
+                    if (this->is_descriptor(r)) this->complete(r);
+                } while(this->is_descriptor(r));
+                
+                return r;
+            }
+
             void complete(const rdcss_descriptor& desc)
             {
                 word_t v = std::atomic_load<word_t>(desc._control_address.get);
                 
-                if (v == desc->_expected_c_value)
+                if (v == desc._expected_c_value)
                     this->cas_1(desc._data_address, desc, desc._new_w_value);
                 else
                     this->cas_1(desc._data_address, desc, desc._expected_d_value);
             }
             
-            
             bool is_descriptor(const rdcss_descriptor& desc) const noexcept
             {
                 return desc.is_desc;
             }
-
         };
-        
+
+        enum class k_cas_descriptor_status
+        {
+            PASSED,
+            FAILED,
+            UNDECIDED
+        };
+
+        template< typename word_t >
         class k_cas_descriptor
         {
+        private:
+            alloc_t _m_thread_id;
+            alloc_t _m_state;
+            alloc_t _m_descriptor_size;
+            alloc_t _m_num_entries;
+
+            std::atomic<k_cas_descriptor_status> _descriptor_status;
+
+        public:
+            k_cas_descriptor() :
+                _m_thread_id(0),
+                _m_state(0),
+                _m_descriptor_size(0),
+                _m_num_entries(0),
+                _descriptor_status(new std::atomic<k_cas_descriptor>(UNDECIDED)) {}
+            
+            k_cas_descriptor(const alloc_t& descriptor_size) :
+                _m_descriptor_size(descriptor_size) {}
+            
+            k_cas_descriptor(const k_cas_descriptor&) = default;
+            k_cas_descriptor &operator=(const k_cas_descriptor_status&) = default;
+
+            ~k_cas_descriptor() {}
         };
         
-        template< typename word_t >
+        template<typename word_t,
+                 typename addr_t >
         union descriptor_union
         {
         private:
             state_t _bits;
-            std::unique_ptr<k_cas_descriptor> _k_cas_descriptor;
-            std::unique_ptr<rdcss_descriptor<word_t>> _rdcss_descriptor;
+            std::unique_ptr<k_cas_descriptor<word_t>> _k_cas_descriptor;
+            std::unique_ptr<rdcss_descriptor<word_t, addr_t>> _rdcss_descriptor;
 
         public:
             inline
@@ -133,11 +176,11 @@ namespace crh
             descriptor_union(const state_t& bits) : _bits(bits) {}
 
             explicit
-            descriptor_union(const rdcss_descriptor<word_t>& rdcss_desc) :
+            descriptor_union(const rdcss_descriptor<word_t, addr_t>& rdcss_desc) :
                 _rdcss_descriptor(std::make_unique<rdcss_desc>()) {}
 
             explicit
-            descriptor_union(const k_cas_descriptor& kcas_desc) :
+            descriptor_union(const k_cas_descriptor<word_t>& kcas_desc) :
                 _k_cas_descriptor(std::make_unique<kcas_desc>()) {}
 
             descriptor_union(const descriptor_union&) = default;
@@ -157,7 +200,35 @@ namespace crh
                 return (desc._bits & S_KCAS_BIT) == S_KCAS_BIT;
             }
         };
+
+    template<typename word_t,
+             typename addr_t >
+    class entry_payload
+    {
+    public:
+        using data_location_t = harris_kcas<Allocator, MemReclaimer>::descriptor_union<word_t, addr_t>;
+
+    private:
+        std::unique_ptr<data_location_t> _data_location;
+        data_location_t _before, _desired;
+    
+    public:
+        entry_payload() :
+            _data_location(std::make_unique<data_location_t>()),
+            _before(new data_location_t()),
+            _desired(new data_location_t()) {}
         
+        entry_payload(const word_t& before_bit_size,
+            const word_t& desired_bit_size) :
+            _before(new data_location_t(before_bit_size)),
+            _desired(new data_location_t(desired_bit_size)) {}
+
+        entry_payload(const entry_payload&) = default;
+        entry_payload &operator=(const entry_payload&) = default;
+
+        ~entry_payload() {}
+    };
+    
     public:
         harris_kcas();
         harris_kcas(harris_kcas &&) = default;
@@ -168,6 +239,5 @@ namespace crh
         
     };
 } // namespace crh
-
 
 #endif // !CRH_HARRIS_KCAS_HPP
