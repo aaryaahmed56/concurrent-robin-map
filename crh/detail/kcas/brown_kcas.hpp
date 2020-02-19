@@ -1,8 +1,7 @@
 #ifndef CRH_BROWN_KCAS_HPP
 #define CRH_BROWN_KCAS_HPP
 
-#include "precomp.hpp"
-
+#include "harris_kcas.hpp"
 namespace crh
 {
     /**
@@ -46,24 +45,30 @@ namespace crh
         /**
          * @brief A class representing the
          * status of a given descriptor for
-         * kCAS, which
+         * kCAS
          * 
          */
         class k_cas_descriptor_status
         {
+        public:
+            using descriptor = typename harris_kcas<Allocator, MemReclaimer>::k_cas_descriptor;
+
         private:
+            std::unique_ptr<descriptor> _descriptor;
             state_t _status;
             state_t _sequence_number;
         
         public:
             explicit
-            k_cas_descriptor_status() : 
+            k_cas_descriptor_status() :
+                _descriptor(std::make_unique<descriptor>()),
                 _status(UNDECIDED),
                 _sequence_number(0) {}
             
             explicit
             k_cas_descriptor_status(const state_t& status, 
-                const state_t& sequence_number) : 
+                const state_t& sequence_number) :
+                _descriptor(std::make_unique<descriptor>()),
                 _status(status), 
                 _sequence_number(sequence_number) {}
 
@@ -123,6 +128,5 @@ namespace crh
         };
     };
 } // namespace crh
-
 
 #endif // !CRH_BROWN_KCAS_HPP
