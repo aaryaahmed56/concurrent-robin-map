@@ -55,23 +55,23 @@ namespace crh
     class bucket_entry_hash<true>
     {
     private:
-        hash::truncated_hash_t _m_hash;
+        hash::truncated_hash_t _hash;
         
     protected:
         void set_hash(const hash::truncated_hash_t& hash) noexcept
         {
-            this->_m_hash = hash::truncated_hash_t(hash);
+            this->_hash = hash::truncated_hash_t(hash);
         }
     
     public:
         bool bucket_hash_equal(const hash::hash_t& hash) const noexcept
         {
-            return this->_m_hash == hash::truncated_hash_t(hash);
+            return this->_hash == hash::truncated_hash_t(hash);
         }
 
         hash::truncated_hash_t truncated_hash() const noexcept
         {
-            return this->_m_hash;
+            return this->_hash;
         }
     };
     

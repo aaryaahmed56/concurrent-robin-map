@@ -31,9 +31,9 @@ namespace crh
         class accessor;
     
     private:
-        unsigned _m_size, _m_size_mask, _m_num_timestamps;
-        std::atomic_uint8_t _m_timestamp_shift;
-        std::unique_ptr<map_to_bucket> _m_table;
+        unsigned _size, _size_mask, _num_timestamps;
+        std::atomic_uint8_t _timestamp_shift;
+        std::unique_ptr<map_to_bucket> _table;
         reclaimer _reclaimer;
     
         struct key_select
@@ -65,8 +65,8 @@ namespace crh
     public:
         concurrent_robin_map(const unsigned& size, 
             const unsigned& threads) : 
-            _m_size(size),
-            _m_size_mask(_m_size - 1) {}
+            _size(size),
+            _size_mask(_size - 1) {}
         
         ~concurrent_robin_map() {}
     

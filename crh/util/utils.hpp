@@ -131,22 +131,22 @@ namespace policy
         using record_base = typename MemReclaimer::record_base;
     
     private:
-        MemReclaimer _m_reclaimer;
-        unsigned _m_thread_id;
+        MemReclaimer _reclaimer;
+        unsigned _thread_id;
         
     public:
-        reclaimer_pin(const MemReclaimer& reclaimer, unsigned thread_id) :
-            _m_reclaimer(reclaimer),
-            _m_thread_id(thread_id)
+        reclaimer_pin(const MemReclaimer& reclaimer, const unsigned& thread_id) :
+            _reclaimer(reclaimer),
+            _thread_id(thread_id)
         {
-            this->_m_reclaimer->enter(this->_m_thread_id);
+            this->_reclaimer->enter(this->_thread_id);
         }
 
-        ~reclaimer_pin() { this->_m_reclaimer->exit(this->_m_thread_id); }
+        ~reclaimer_pin() { this->_reclaimer->exit(this->_thread_id); }
 
-        record_handle get_rec() { return this->_m_reclaimer->get_rec(this->_m_thread_id); }
+        record_handle get_rec() { return this->_reclaimer->get_rec(this->_thread_id); }
 
-        void retire(const record_handle& handle) { this->_m_reclaimer->exit(this->_m_thread_id); }
+        void retire(const record_handle& handle) { this->_reclaimer->exit(this->_thread_id); }
     };
     
     template< std::size_t Value >

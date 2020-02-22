@@ -133,23 +133,23 @@ namespace crh
         class k_cas_descriptor
         {
         private:
-            alloc_t _m_thread_id;
-            alloc_t _m_state;
-            alloc_t _m_descriptor_size;
-            alloc_t _m_num_entries;
+            alloc_t _thread_id;
+            alloc_t _state;
+            alloc_t _descriptor_size;
+            alloc_t _num_entries;
 
             std::atomic<k_cas_descriptor_status> _descriptor_status;
 
         public:
             k_cas_descriptor() :
-                _m_thread_id(0),
-                _m_state(0),
-                _m_descriptor_size(0),
-                _m_num_entries(0),
+                _thread_id(0),
+                _state(0),
+                _descriptor_size(0),
+                _num_entries(0),
                 _descriptor_status(new std::atomic<k_cas_descriptor>(UNDECIDED)) {}
             
             k_cas_descriptor(const alloc_t& descriptor_size) :
-                _m_descriptor_size(descriptor_size) {}
+                _descriptor_size(descriptor_size) {}
             
             k_cas_descriptor(const k_cas_descriptor&) = default;
             k_cas_descriptor &operator=(const k_cas_descriptor_status&) = default;
