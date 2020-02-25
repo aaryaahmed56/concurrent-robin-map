@@ -12,8 +12,8 @@ namespace crh
      * @tparam Allocator An allocator policy
      * @tparam MemReclaimer A memory reclaimer policy
      */
-    template<class Allocator,
-             class MemReclaimer >
+    template< class Allocator,
+              class MemReclaimer >
     class brown_kcas
     {
     public:
@@ -54,9 +54,9 @@ namespace crh
             using descriptor = typename harris_kcas<Allocator, MemReclaimer>::k_cas_descriptor;
 
         private:
+            state_t _sequence_number, _status;
+            
             std::unique_ptr<descriptor> _descriptor;
-            state_t _status;
-            state_t _sequence_number;
         
         public:
             explicit

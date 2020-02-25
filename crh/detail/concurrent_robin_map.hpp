@@ -5,11 +5,11 @@
 
 namespace crh
 {
-    template<class Key,
-             class T,
-             class Hash = hash::hash<Key>,
-             class Alloc = std::allocator<std::pair<const Key, T>>,
-             class... Policies >
+    template< class Key,
+              class T,
+              class Hash = hash::hash<Key>,
+              class Alloc = std::allocator<std::pair<const Key, T>>,
+              class... Policies >
     class concurrent_robin_map
     {
     public:
@@ -31,11 +31,13 @@ namespace crh
         class accessor;
     
     private:
-        unsigned _size, _size_mask, _num_timestamps;
+        unsigned _num_timestamps, _size, _size_mask;
+        
         std::atomic_uint8_t _timestamp_shift;
+        
         std::unique_ptr<map_to_bucket> _table;
+        
         reclaimer _reclaimer;
-    
         struct key_select
         {
             const key_type& operator()(const std::pair<key_type, map_type>& key_value) const noexcept
@@ -48,7 +50,6 @@ namespace crh
                 return key_value.first;
             }
         };
-    
         struct value_select
         {
             const map_type& operator()(const std::pair<key_type, map_type>& key_value) const noexcept
@@ -91,7 +92,6 @@ namespace crh
         iterator begin();
         iterator end();
 };
-
 } // namespace crh
 
 #endif // !CONCURRENT_ROBIN_MAP_HPP

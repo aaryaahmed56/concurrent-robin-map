@@ -103,8 +103,7 @@ namespace policy
     class reclaimer_allocator
     {
     private:
-        std::atomic_size_t _frees;
-        std::atomic_size_t _mallocs;
+        std::atomic_size_t _frees, _mallocs;
 
     public:
         std::shared_ptr<void> malloc(unsigned size) 
@@ -131,8 +130,9 @@ namespace policy
         using record_base = typename MemReclaimer::record_base;
     
     private:
-        MemReclaimer _reclaimer;
         unsigned _thread_id;
+        
+        MemReclaimer _reclaimer;
         
     public:
         reclaimer_pin(const MemReclaimer& reclaimer, const unsigned& thread_id) :

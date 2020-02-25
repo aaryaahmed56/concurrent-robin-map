@@ -11,8 +11,8 @@ namespace crh
      * @tparam Allocator 
      * @tparam MemReclaimer 
      */
-    template<class Allocator,
-             class MemReclaimer >
+    template< class Allocator,
+              class MemReclaimer >
     class harris_kcas
     {
     public:
@@ -33,17 +33,16 @@ namespace crh
          * 
          * @tparam word_t A word of specified bit size
          */
-        template<typename word_t,
-                 typename addr_t >
+        template< typename word_t,
+                  typename addr_t >
         class rdcss_descriptor
         {
         private:
+            const word_t _expected_c_value, _expected_d_value, _new_w_value;
+            
             std::atomic_bool is_desc = {true};
-            std::unique_ptr<word_t> _control_address;
-            std::unique_ptr<word_t> _data_address;
-            const word_t _expected_c_value;
-            const word_t _expected_d_value;
-            const word_t _new_w_value;
+            
+            std::unique_ptr<word_t> _control_address, _data_address;
 
         public:
             rdcss_descriptor() {}
@@ -133,10 +132,7 @@ namespace crh
         class k_cas_descriptor
         {
         private:
-            alloc_t _thread_id;
-            alloc_t _state;
-            alloc_t _descriptor_size;
-            alloc_t _num_entries;
+            alloc_t _thread_id, _state, _descriptor_size, _num_entries;
 
             std::atomic<k_cas_descriptor_status> _descriptor_status;
 
@@ -146,7 +142,7 @@ namespace crh
                 _state(0),
                 _descriptor_size(0),
                 _num_entries(0),
-                _descriptor_status(new std::atomic<k_cas_descriptor>(UNDECIDED)) {}
+                _descriptor_status(std::atomic<k_cas_descriptor>(UNDECIDED)) {}
             
             k_cas_descriptor(const alloc_t& descriptor_size) :
                 _descriptor_size(descriptor_size) {}
@@ -157,12 +153,13 @@ namespace crh
             ~k_cas_descriptor() {}
         };
         
-        template<typename word_t,
-                 typename addr_t >
+        template< typename word_t,
+                  typename addr_t >
         union descriptor_union
         {
         private:
             state_t _bits;
+            
             std::unique_ptr<k_cas_descriptor<word_t>> _k_cas_descriptor;
             std::unique_ptr<rdcss_descriptor<word_t, addr_t>> _rdcss_descriptor;
 
@@ -209,14 +206,15 @@ namespace crh
         using data_location_t = harris_kcas<Allocator, MemReclaimer>::descriptor_union<word_t, addr_t>;
 
     private:
-        std::unique_ptr<data_location_t> _data_location;
         data_location_t _before, _desired;
+        
+        std::unique_ptr<data_location_t> _data_location;
     
     public:
         entry_payload() :
             _data_location(std::make_unique<data_location_t>()),
-            _before(new data_location_t()),
-            _desired(new data_location_t()) {}
+            _before(data_location_t()),
+            _desired(data_location_t()) {}
         
         entry_payload(const word_t& before_bit_size,
             const word_t& desired_bit_size) :
