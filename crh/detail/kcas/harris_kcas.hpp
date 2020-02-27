@@ -19,21 +19,19 @@ namespace crh
         using alloc_t = std::size_t;
         using state_t = std::uintptr_t;
 
-        static const alloc_t S_KCAS_BIT = 0x1;
-        static const alloc_t S_RDCSS_BIT = 0x2;
-
-        static const state_t UNDECIDED = 0;
-        static const state_t SUCCESS = 1;
-        static const state_t FAILED = 2;
+        static const alloc_t S_KCAS_BIT = 0x1, S_RDCSS_BIT = 0x2;
+        
+        static const state_t UNDECIDED = 0, SUCCESS = 1, FAILED = 2;
 
     private:
-        /**
-         * @brief General descriptor control for the 
-         * restricted double compare and single swap method
-         * 
-         * @tparam word_t A word of specified bit size
-         */
-        template< typename word_t,
+    /**
+     * @brief General descriptor control for the restricted double
+     * compare and single swap method
+     * 
+     * @tparam word_t A word of specified bit size
+     * @tparam addr_t A control or data address
+     */
+    template< typename word_t,
                   typename addr_t >
         class rdcss_descriptor
         {
@@ -42,7 +40,7 @@ namespace crh
             
             std::atomic_bool is_desc = {true};
             
-            std::unique_ptr<word_t> _control_address, _data_address;
+            std::unique_ptr<addr_t> _control_address, _data_address;
 
         public:
             rdcss_descriptor() {}
@@ -123,9 +121,9 @@ namespace crh
 
         enum class k_cas_descriptor_status
         {
-            PASSED,
-            FAILED,
-            UNDECIDED
+            UNDECIDED,
+            SUCCESS,
+            FAILED
         };
 
         template< typename word_t >
@@ -218,8 +216,8 @@ namespace crh
         
         entry_payload(const word_t& before_bit_size,
             const word_t& desired_bit_size) :
-            _before(new data_location_t(before_bit_size)),
-            _desired(new data_location_t(desired_bit_size)) {}
+            _before(data_location_t(before_bit_size)),
+            _desired(data_location_t(desired_bit_size)) {}
 
         entry_payload(const entry_payload&) = default;
         entry_payload &operator=(const entry_payload&) = default;
