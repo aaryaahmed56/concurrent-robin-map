@@ -129,12 +129,15 @@ namespace crh
                   typename addr_t >
         union descriptor_union
         {
+        public:
+            using rdcss_descriptor = harris_kcas<Allocator, MemReclaimer>::rdcss_descriptor<word_t, addr_t>;
+        
         private:
             state_t _bits;
 
             word_t _val;
 
-            std::unique_ptr<rdcss_descriptor<word_t, addr_t>> _rdcss_descriptor;
+            std::unique_ptr<rdcss_descriptor> _descriptor;
 
         public:
             descriptor_union() : _bits(0) {}
@@ -144,8 +147,8 @@ namespace crh
             descriptor_union(const state_t& bits) : _bits(bits) {}
 
             explicit
-            descriptor_union(const rdcss_descriptor<word_t, addr_t>& rdcss_desc) :
-                _rdcss_descriptor(std::make_unique<rdcss_desc>()) {}
+            descriptor_union(const rdcss_descriptor& desc) :
+                _descriptor(std::make_unique<desc>()) {}
 
             inline
             descriptor_union(const word_t& val) : _val(val) {}
@@ -160,16 +163,10 @@ namespace crh
             {
                 return (desc._bits & S_RDCSS_BIT) == S_RDCSS_BIT;
             }
-
-            static
-            bool is_kcas(const descriptor_union& desc)
-            {
-                return (desc._bits & S_KCAS_BIT) == S_KCAS_BIT;
-            }
         };
         
-        template<typename word_t,
-                 typename addr_t >
+        template< typename word_t,
+                  typename addr_t >
         class entry_payload
         {
         public:
@@ -184,16 +181,22 @@ namespace crh
 
         public:
             entry_payload() :
-                _data_location(std::make_unique<data_location_t>()),
                 _old_val(data_location_t()),
-                _new_val(data_location_t()) {}
+                _new_val(data_location_t()),
+                _data_location(std::make_unique<data_location_t>()) {}
 
-            inline
             explicit
             entry_payload(const word_t& old_val,
                 const word_t& new_val) :
                 _old_val(data_location_t(old_val)),
-                _new_val(data_location_t(new_val)) {}
+                _new_val(data_location_t(new_val)),
+                _data_location(std::make_unique<data_location_t>()) {}
+
+            explicit
+            entry_payload(const data_location_t& location) :
+                _old_val(data_location_t()),
+                _new_val(data_location_t()),
+                _data_location(std::make_unique<data_location_t>(location)) {}
 
             entry_payload(const entry_payload&) = default;
             entry_payload &operator=(const entry_payload&) = default;
@@ -206,7 +209,7 @@ namespace crh
         class k_cas_descriptor
         {
         public:
-            using entry = entry_payload<word_t, addr_t>;
+            using entry = harris_kcas<Allocator, MemReclaimer>::entry_payload<word_t, addr_t>;
         
         private:
             const unsigned _n;
