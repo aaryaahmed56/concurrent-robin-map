@@ -32,7 +32,7 @@ namespace crh
      * @tparam addr_t A control or data address
      */
     template< typename word_t,
-                  typename addr_t >
+              typename addr_t >
         class rdcss_descriptor
         {
         private:
@@ -125,45 +125,18 @@ namespace crh
             SUCCESS,
             FAILED
         };
-
-        template< typename word_t >
-        class k_cas_descriptor
-        {
-        private:
-            alloc_t _thread_id, _state, _descriptor_size, _num_entries;
-
-            std::atomic<k_cas_descriptor_status> _descriptor_status;
-
-        public:
-            k_cas_descriptor() :
-                _thread_id(0),
-                _state(0),
-                _descriptor_size(0),
-                _num_entries(0),
-                _descriptor_status(std::atomic<k_cas_descriptor>(UNDECIDED)) {}
-            
-            k_cas_descriptor(const alloc_t& descriptor_size) :
-                _descriptor_size(descriptor_size) {}
-            
-            k_cas_descriptor(const k_cas_descriptor&) = default;
-            k_cas_descriptor &operator=(const k_cas_descriptor_status&) = default;
-
-            ~k_cas_descriptor() {}
-        };
-        
         template< typename word_t,
                   typename addr_t >
         union descriptor_union
         {
         private:
             state_t _bits;
-            
-            std::unique_ptr<k_cas_descriptor<word_t>> _k_cas_descriptor;
+
+            word_t _val;
+
             std::unique_ptr<rdcss_descriptor<word_t, addr_t>> _rdcss_descriptor;
 
         public:
-            inline
-            explicit
             descriptor_union() : _bits(0) {}
 
             inline
@@ -174,9 +147,8 @@ namespace crh
             descriptor_union(const rdcss_descriptor<word_t, addr_t>& rdcss_desc) :
                 _rdcss_descriptor(std::make_unique<rdcss_desc>()) {}
 
-            explicit
-            descriptor_union(const k_cas_descriptor<word_t>& kcas_desc) :
-                _k_cas_descriptor(std::make_unique<kcas_desc>()) {}
+            inline
+            descriptor_union(const word_t& val) : _val(val) {}
 
             descriptor_union(const descriptor_union&) = default;
             descriptor_union &operator=(const descriptor_union&) = default;
@@ -195,35 +167,85 @@ namespace crh
                 return (desc._bits & S_KCAS_BIT) == S_KCAS_BIT;
             }
         };
-
-    template<typename word_t,
-             typename addr_t >
-    class entry_payload
-    {
-    public:
-        using data_location_t = harris_kcas<Allocator, MemReclaimer>::descriptor_union<word_t, addr_t>;
-
-    private:
-        data_location_t _before, _desired;
         
-        std::unique_ptr<data_location_t> _data_location;
-    
-    public:
-        entry_payload() :
-            _data_location(std::make_unique<data_location_t>()),
-            _before(data_location_t()),
-            _desired(data_location_t()) {}
+        template<typename word_t,
+                 typename addr_t >
+        class entry_payload
+        {
+        public:
+            using data_location_t = harris_kcas<Allocator, MemReclaimer>::descriptor_union<word_t, addr_t>;
+
+        private:
+            addr_t _addr;
+
+            data_location_t _old_val, _new_val;
+
+            std::unique_ptr<data_location_t> _data_location;
+
+        public:
+            entry_payload() :
+                _data_location(std::make_unique<data_location_t>()),
+                _old_val(data_location_t()),
+                _new_val(data_location_t()) {}
+
+            inline
+            explicit
+            entry_payload(const word_t& old_val,
+                const word_t& new_val) :
+                _old_val(data_location_t(old_val)),
+                _new_val(data_location_t(new_val)) {}
+
+            entry_payload(const entry_payload&) = default;
+            entry_payload &operator=(const entry_payload&) = default;
+
+            ~entry_payload() {}
+        };
         
-        entry_payload(const word_t& before_bit_size,
-            const word_t& desired_bit_size) :
-            _before(data_location_t(before_bit_size)),
-            _desired(data_location_t(desired_bit_size)) {}
+        template< typename word_t,
+                  typename addr_t >
+        class k_cas_descriptor
+        {
+        public:
+            using entry = entry_payload<word_t, addr_t>;
+        
+        private:
+            const unsigned _n;
+            
+            entry _entry;
+            
+            std::atomic<k_cas_descriptor_status> _descriptor_status;
 
-        entry_payload(const entry_payload&) = default;
-        entry_payload &operator=(const entry_payload&) = default;
+        public:
+            k_cas_descriptor() :
+                _entry(entry()),
+                _descriptor_status(std::atomic<k_cas_descriptor_status>(UNDECIDED)) {}
+            
+            k_cas_descriptor(const std::atomic<k_cas_descriptor_status>& desc_status) :
+                _entry(entry()),
+                _descriptor_status(desc_status) {}
 
-        ~entry_payload() {}
-    };
+            k_cas_descriptor(const word_t& old_val, const word_t& new_val) :
+                _entry(entry(old_val, new_val)),
+                _descriptor_status(std::atomic<k_cas_descriptor_status>(UNDECIDED)) {}
+            
+            k_cas_descriptor(const k_cas_descriptor&) = default;
+            k_cas_descriptor &operator=(const k_cas_descriptor_status&) = default;
+
+            ~k_cas_descriptor() {}
+
+            inline
+            bool kcas(const k_cas_descriptor& desc) const noexcept
+            {
+                if (std::atomic_load<word_t>(desc._descriptor_status) == UNDECIDED)
+                {
+                    this->_descriptor_status = SUCCESS;
+                    for(unsigned i = 0; i < desc._n; ++i)
+                    {
+                        this->_entry = desc._entry;
+                    }
+                }
+            }
+        };
     
     public:
         harris_kcas();
@@ -232,7 +254,6 @@ namespace crh
         harris_kcas &operator=(harris_kcas &&) = default;
         harris_kcas &operator=(const harris_kcas &) = default;
         ~harris_kcas();
-        
     };
 } // namespace crh
 
