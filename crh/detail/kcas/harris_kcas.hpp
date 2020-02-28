@@ -146,12 +146,14 @@ namespace crh
             explicit
             descriptor_union(const state_t& bits) : _bits(bits) {}
 
+            inline
+            explicit
+            descriptor_union(const word_t& val) : _val(val) {}
+            
             explicit
             descriptor_union(const rdcss_descriptor& desc) :
-                _descriptor(std::make_unique<desc>()) {}
+                _descriptor(std::make_unique<rdcss_descriptor>(desc)) {}
 
-            inline
-            descriptor_union(const word_t& val) : _val(val) {}
 
             descriptor_union(const descriptor_union&) = default;
             descriptor_union &operator=(const descriptor_union&) = default;
@@ -191,12 +193,6 @@ namespace crh
                 _old_val(data_location_t(old_val)),
                 _new_val(data_location_t(new_val)),
                 _data_location(std::make_unique<data_location_t>()) {}
-
-            explicit
-            entry_payload(const data_location_t& location) :
-                _old_val(data_location_t()),
-                _new_val(data_location_t()),
-                _data_location(std::make_unique<data_location_t>(location)) {}
 
             entry_payload(const entry_payload&) = default;
             entry_payload &operator=(const entry_payload&) = default;
