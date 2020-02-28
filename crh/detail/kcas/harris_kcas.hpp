@@ -38,7 +38,7 @@ namespace crh
         private:
             const word_t _expected_c_value, _expected_d_value, _new_w_value;
             
-            std::atomic_bool is_desc = {true};
+            std::atomic<bool> is_desc = {true};
             
             std::unique_ptr<addr_t> _control_address, _data_address;
 
@@ -113,6 +113,7 @@ namespace crh
                     this->cas_1(desc._data_address, desc, desc._expected_d_value);
             }
             
+            inline
             bool is_descriptor(const rdcss_descriptor& desc) const noexcept
             {
                 return desc.is_desc;
@@ -211,7 +212,8 @@ namespace crh
             const unsigned _n;
             
             entry _entry;
-            
+
+            std::atomic<bool> is_desc = {true};
             std::atomic<k_cas_descriptor_status> _descriptor_status;
 
         public:
@@ -232,6 +234,13 @@ namespace crh
 
             ~k_cas_descriptor() {}
 
+            /**
+             * @brief Multi-word compare and swap method
+             * 
+             * @param desc A kCAS descriptor
+             * @return true 
+             * @return false 
+             */
             inline
             bool kcas(const k_cas_descriptor& desc) const noexcept
             {
@@ -243,6 +252,12 @@ namespace crh
                         this->_entry = desc._entry;
                     }
                 }
+            }
+
+            inline
+            bool is_descriptor(const k_cas_descriptor& desc) const noexcept
+            {
+                return desc.is_desc;
             }
         };
     
