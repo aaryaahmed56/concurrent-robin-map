@@ -42,25 +42,18 @@ namespace crh
          */
         class k_cas_descriptor_status
         {
-        public:
-            using descriptor = typename harris_kcas<Allocator, MemReclaimer>::k_cas_descriptor;
-
         private:
             state_t _sequence_number, _status;
             
-            std::unique_ptr<descriptor> _descriptor;
-        
         public:
             explicit
             k_cas_descriptor_status() :
-                _descriptor(std::make_unique<descriptor>()),
                 _status(UNDECIDED),
                 _sequence_number(0) {}
             
             explicit
             k_cas_descriptor_status(const state_t& status, 
                 const state_t& sequence_number) :
-                _descriptor(std::make_unique<descriptor>()),
                 _status(status), 
                 _sequence_number(sequence_number) {}
 
