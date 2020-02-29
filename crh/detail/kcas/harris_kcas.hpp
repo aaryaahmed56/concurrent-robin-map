@@ -61,9 +61,9 @@ namespace crh
              */
             word_t cas_1(std::unique_ptr<word_t> a, word_t o, word_t n)
             {
-                word_t old = a.get;
+                word_t old = a.get();
                 
-                if (old == o) a.release = n;
+                if (old == o) a = std::make_unique<word_t>(n);
                 
                 return old;
             }
@@ -96,7 +96,7 @@ namespace crh
                 word_t r;
                 do
                 {
-                    r = std::atomic_load<addr_t>(addr.get);
+                    r = std::atomic_load<addr_t>(addr.get());
                     if (this->is_descriptor(r)) this->complete(r);
                 } while(this->is_descriptor(r));
                 
@@ -105,7 +105,7 @@ namespace crh
 
             void complete(const rdcss_descriptor& desc)
             {
-                word_t v = std::atomic_load<word_t>(desc._control_address.get);
+                word_t v = std::atomic_load<word_t>(desc._control_address.get());
                 
                 if (v == desc._expected_c_value)
                     this->cas_1(desc._data_address, desc, desc._new_w_value);
