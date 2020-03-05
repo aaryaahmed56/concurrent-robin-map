@@ -24,26 +24,31 @@ namespace crh
         static const state_t UNDECIDED = 0, SUCCESS = 1, FAILED = 2;
 
     private:
-    /**
-     * @brief General descriptor control for the restricted double
-     * compare and single swap method
-     * 
-     * @tparam word_t A word of specified bit size
-     * @tparam addr_t A control or data address
-     */
-    template< typename word_t,
+        /**
+         * @brief General descriptor control for the restricted double
+         * compare and single swap method
+         * 
+         * @tparam word_t A word of specified bit size
+         * @tparam addr_t A control or data address
+         */
+        template< typename word_t,
               typename addr_t >
         class rdcss_descriptor
         {
         private:
             const word_t _expected_c_value, _expected_d_value, _new_w_value;
             
-            std::atomic<bool> is_desc = {true};
+            std::atomic<bool> is_desc;
             
             std::unique_ptr<addr_t> _control_address, _data_address;
 
         public:
-            rdcss_descriptor() {}
+            rdcss_descriptor() : is_desc(true) {}
+
+            rdcss_descriptor(const addr_t& control_address,
+                const addr_t& data_address) :
+                _control_address(std::make_unique<addr_t>(control_address)),
+                _data_address(std::make_unique<addr_t>(data_address)) {}
 
             rdcss_descriptor(const rdcss_descriptor&) = default;
             rdcss_descriptor &operator=(const rdcss_descriptor&) = default;
@@ -59,7 +64,7 @@ namespace crh
              * @param n The value to be assigned
              * @return word_t A word of specified bit size
              */
-            word_t cas_1(std::unique_ptr<word_t> a, word_t o, word_t n)
+            word_t cas_1(std::unique_ptr<word_t> a, word_t o, word_t n) const noexcept
             {
                 word_t old = a.get();
                 
@@ -77,7 +82,7 @@ namespace crh
              * and values
              * @return word_t A word of specified bit size
              */
-            word_t rdcss(const rdcss_descriptor& desc)
+            word_t rdcss(const rdcss_descriptor& desc) const noexcept
             {
                 word_t r;
 
@@ -91,7 +96,7 @@ namespace crh
                 return r;
             }
 
-            word_t read(std::unique_ptr<addr_t> addr)
+            word_t read(std::unique_ptr<addr_t> addr) const noexcept
             {
                 word_t r;
                 do
@@ -103,7 +108,7 @@ namespace crh
                 return r;
             }
 
-            void complete(const rdcss_descriptor& desc)
+            void complete(const rdcss_descriptor& desc) const noexcept
             {
                 word_t v = std::atomic_load<word_t>(desc._control_address.get());
                 
@@ -126,12 +131,13 @@ namespace crh
             SUCCESS,
             FAILED
         };
+        
         template< typename word_t,
                   typename addr_t >
         union descriptor_union
         {
         public:
-            using rdcss_descriptor = harris_kcas<Allocator, MemReclaimer>::rdcss_descriptor<word_t, addr_t>;
+            using rdcss_descriptor = typename harris_kcas<Allocator, MemReclaimer>::rdcss_descriptor<word_t, addr_t>;
         
         private:
             state_t _bits;
@@ -173,7 +179,7 @@ namespace crh
         class entry_payload
         {
         public:
-            using data_location_t = harris_kcas<Allocator, MemReclaimer>::descriptor_union<word_t, addr_t>;
+            using data_location_t = typename harris_kcas<Allocator, MemReclaimer>::descriptor_union<word_t, addr_t>;
 
         private:
             addr_t _addr;
@@ -206,7 +212,7 @@ namespace crh
         class k_cas_descriptor
         {
         public:
-            using entry = harris_kcas<Allocator, MemReclaimer>::entry_payload<word_t, addr_t>;
+            using entry = typename harris_kcas<Allocator, MemReclaimer>::entry_payload<word_t, addr_t>;
         
         private:
             const unsigned _n;

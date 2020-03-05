@@ -39,10 +39,12 @@ namespace crh
     class bucket_entry_hash
     {
     protected:
+        inline
+        const
         void set_hash(const hash::hash_t& hash) noexcept {}
 
     public:
-        bool bucket_hash_equal(const hash::hash_t& hash) noexcept { return true; }
+        bool bucket_hash_equal(const hash::hash_t& hash) const noexcept { return true; }
         hash::truncated_hash_t truncated_hash() const noexcept { return 0; }
     };
     /**
@@ -58,6 +60,8 @@ namespace crh
         hash::truncated_hash_t _hash;
         
     protected:
+        inline
+        const
         void set_hash(const hash::truncated_hash_t& hash) noexcept
         {
             this->_hash = hash::truncated_hash_t(hash);
@@ -74,7 +78,6 @@ namespace crh
             return this->_hash;
         }
     };
-    
 } // namespace crh
 
 #endif // !CONCURRENT_ROBIN_HASH_HPP

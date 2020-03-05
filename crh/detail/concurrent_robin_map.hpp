@@ -40,7 +40,8 @@ namespace crh
         reclaimer _reclaimer;
         struct key_select
         {
-            const key_type& operator()(const std::pair<key_type, map_type>& key_value) const noexcept
+            const
+            key_type& operator()(const std::pair<key_type, map_type>& key_value) const noexcept
             {
                 return key_value.first;
             }
@@ -52,7 +53,8 @@ namespace crh
         };
         struct value_select
         {
-            const map_type& operator()(const std::pair<key_type, map_type>& key_value) const noexcept
+            const
+            map_type& operator()(const std::pair<key_type, map_type>& key_value) const noexcept
             {
                 return key_value.second;
             }

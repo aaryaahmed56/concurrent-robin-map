@@ -78,7 +78,7 @@ namespace crh
             tagged_pointer(const state_t& raw_bits) : 
                 _raw_bits(raw_bits)
             {
-                assert(is_bits(*this));
+                static_assert(is_bits(*this));
             }
 
             explicit
@@ -100,13 +100,15 @@ namespace crh
             }
             
             static
-            bool is_rdcss(const tagged_pointer& tag_ptr)
+            inline
+            bool is_rdcss(const tagged_pointer& tag_ptr) noexcept
             {
                 return (tag_ptr._raw_bits & S_RDCSS_TAG) == S_RDCSS_TAG;
             }
 
             static
-            bool is_bits(const tagged_pointer& tag_ptr)
+            inline
+            bool is_bits(const tagged_pointer& tag_ptr) noexcept
             {
                 return !(is_kcas(tag_ptr) || is_rdcss(tag_ptr));
             }
