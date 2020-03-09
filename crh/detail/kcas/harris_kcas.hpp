@@ -159,7 +159,10 @@ namespace crh
             
             explicit
             descriptor_union(const rdcss_descriptor& desc) :
-                _descriptor(std::make_unique<rdcss_descriptor>(desc)) {}
+                _descriptor(std::make_unique<rdcss_descriptor>(desc))
+            {
+                static_assert(this->is_rdcss(*this));
+            }
 
 
             descriptor_union(const descriptor_union&) = default;
@@ -167,10 +170,16 @@ namespace crh
 
             ~descriptor_union() {}
 
-            static
-            bool is_rdcss(const descriptor_union& desc)
+            inline
+            bool is_rdcss() const noexcept
             {
-                return (desc._bits & S_RDCSS_BIT) == S_RDCSS_BIT;
+                return (this->_bits & S_RDCSS_BIT) == S_RDCSS_BIT;
+            }
+
+            inline
+            bool is_kcas() const noexcept
+            {
+                return (this->_bits & S_KCAS_BIT) == S_KCAS_BIT;
             }
         };
         
