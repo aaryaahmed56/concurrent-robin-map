@@ -27,11 +27,11 @@ namespace crh
             KCAS
         };
 
-        static const alloc_t S_NO_TAG = 0x0, S_KCAS_TAG = 0x1, S_RDCSS_TAG = 0x2;
-        static const alloc_t S_THREAD_ID_SHIFT = 2, S_THREAD_ID_MASK = (1 << 8) - 1;
-        static const alloc_t S_SEQUENCE_SHIFT = 10, S_SEQUENCE_MASK = (alloc_t(1) << 54) - 1;
+        static constexpr alloc_t S_NO_TAG = 0x0, S_KCAS_TAG = 0x1, S_RDCSS_TAG = 0x2;
+        static constexpr alloc_t S_THREAD_ID_SHIFT = 2, S_THREAD_ID_MASK = (1 << 8) - 1;
+        static constexpr alloc_t S_SEQUENCE_SHIFT = 10, S_SEQUENCE_MASK = (alloc_t(1) << 54) - 1;
         
-        static const state_t UNDECIDED = 0, SUCCESS = 1, FAILED = 2;
+        static constexpr state_t UNDECIDED = 0, SUCCESS = 1, FAILED = 2;
         
     private:
         /**

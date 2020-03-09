@@ -19,9 +19,9 @@ namespace crh
         using alloc_t = std::size_t;
         using state_t = std::uintptr_t;
 
-        static const alloc_t S_KCAS_BIT = 0x1, S_RDCSS_BIT = 0x2;
+        static constexpr alloc_t S_KCAS_BIT = 0x1, S_RDCSS_BIT = 0x2;
         
-        static const state_t UNDECIDED = 0, SUCCESS = 1, FAILED = 2;
+        static constexpr state_t UNDECIDED = 0, SUCCESS = 1, FAILED = 2;
 
     private:
         /**
