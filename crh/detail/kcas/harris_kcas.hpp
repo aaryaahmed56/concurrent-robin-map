@@ -171,15 +171,15 @@ namespace crh
             ~descriptor_union() {}
 
             inline
-            bool is_rdcss() const noexcept
+            bool is_rdcss(const descriptor_union& desc) const noexcept
             {
-                return (this->_bits & S_RDCSS_BIT) == S_RDCSS_BIT;
+                return (desc._bits & S_RDCSS_BIT) == S_RDCSS_BIT;
             }
 
             inline
-            bool is_kcas() const noexcept
+            bool is_kcas(const descriptor_union& desc) const noexcept
             {
-                return (this->_bits & S_KCAS_BIT) == S_KCAS_BIT;
+                return (desc._bits & S_KCAS_BIT) == S_KCAS_BIT;
             }
         };
         
