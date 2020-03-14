@@ -17,8 +17,8 @@ namespace crh
     class brown_kcas
     {
     public:
-        using alloc_t = std::size_t;
-        using state_t = std::uintptr_t;
+        using alloc_t = typename std::size_t;
+        using state_t = typename std::uintptr_t;
         
         enum class tag_type
         {
@@ -46,11 +46,13 @@ namespace crh
             state_t _sequence_number, _status;
             
         public:
+            inline
             explicit
             k_cas_descriptor_status() :
                 _status(UNDECIDED),
                 _sequence_number(0) {}
             
+            inline
             explicit
             k_cas_descriptor_status(const state_t& status, 
                 const state_t& sequence_number) :
@@ -71,14 +73,16 @@ namespace crh
             state_t _raw_bits;
         
         public:
+            inline
             explicit
             tagged_pointer() : _raw_bits(0) {}
 
+            inline
             explicit
             tagged_pointer(const state_t& raw_bits) : 
                 _raw_bits(raw_bits)
             {
-                static_assert(this->is_bits(*this));
+                static_assert(is_bits(*this));
             }
 
             explicit
@@ -92,23 +96,29 @@ namespace crh
             tagged_pointer &operator=(const tagged_pointer&) = default;
 
             ~tagged_pointer() {}
-
+            
+            static
             inline
-            bool is_kcas(const tagged_pointer& tag_ptr) const noexcept
+            constexpr
+            bool is_kcas(const tagged_pointer& tag_ptr) noexcept
             {
                 return (tag_ptr._raw_bits & S_KCAS_TAG) == S_KCAS_TAG;
             }
-            
+
+            static
             inline
-            bool is_rdcss(const tagged_pointer& tag_ptr) const noexcept
+            constexpr
+            bool is_rdcss(const tagged_pointer& tag_ptr) noexcept
             {
                 return (tag_ptr._raw_bits & S_RDCSS_TAG) == S_RDCSS_TAG;
             }
 
+            static
             inline
-            bool is_bits(const tagged_pointer& tag_ptr) const noexcept
+            constexpr
+            bool is_bits(const tagged_pointer& tag_ptr) noexcept
             {
-                return !(this->is_kcas(tag_ptr) || this->is_rdcss(tag_ptr));
+                return !(is_kcas(tag_ptr) || is_rdcss(tag_ptr));
             }
         };
     };

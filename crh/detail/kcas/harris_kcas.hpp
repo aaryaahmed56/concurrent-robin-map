@@ -16,8 +16,8 @@ namespace crh
     class harris_kcas
     {
     public:
-        using alloc_t = std::size_t;
-        using state_t = std::uintptr_t;
+        using alloc_t = typename std::size_t;
+        using state_t = typename std::uintptr_t;
 
         static constexpr alloc_t S_KCAS_BIT = 0x1, S_RDCSS_BIT = 0x2;
         
@@ -43,8 +43,10 @@ namespace crh
             std::unique_ptr<addr_t> _control_address, _data_address;
 
         public:
+            inline
             rdcss_descriptor() : is_desc(true) {}
 
+            explicit
             rdcss_descriptor(const addr_t& control_address,
                 const addr_t& data_address) :
                 _control_address(std::make_unique<addr_t>(control_address)),
@@ -64,7 +66,10 @@ namespace crh
              * @param n The value to be assigned
              * @return word_t A word of specified bit size
              */
-            word_t cas_1(std::unique_ptr<word_t> a, word_t o, word_t n) const noexcept
+            static
+            inline
+            constexpr
+            word_t cas_1(std::unique_ptr<word_t> a, word_t o, word_t n) noexcept
             {
                 word_t old = a.get();
                 
@@ -82,44 +87,53 @@ namespace crh
              * and values
              * @return word_t A word of specified bit size
              */
-            word_t rdcss(const rdcss_descriptor& desc) const noexcept
+            static
+            constexpr
+            word_t rdcss(const rdcss_descriptor& desc) noexcept
             {
                 word_t r;
 
                 do
                 {
-                    r = this->cas_1(desc._data_address, desc._expected_d_value, desc);
-                } while(this->is_descriptor(desc));
+                    r = cas_1(desc._data_address, desc._expected_d_value, desc);
+                } while(is_descriptor(desc));
                 
-                if (r == desc._expected_d_value) this->complete(desc);
+                if (r == desc._expected_d_value) complete(desc);
                 
                 return r;
             }
 
-            word_t read(std::unique_ptr<addr_t> addr) const noexcept
+            static
+            constexpr
+            word_t read(std::unique_ptr<addr_t> addr) noexcept
             {
                 word_t r;
                 do
                 {
                     r = std::atomic_load<addr_t>(addr.get());
-                    if (this->is_descriptor(r)) this->complete(r);
-                } while(this->is_descriptor(r));
+                    if (is_descriptor(r)) complete(r);
+                } while(is_descriptor(r));
                 
                 return r;
             }
 
-            void complete(const rdcss_descriptor& desc) const noexcept
+            static
+            inline
+            constexpr
+            void complete(const rdcss_descriptor& desc) noexcept
             {
                 word_t v = std::atomic_load<word_t>(desc._control_address.get());
                 
                 if (v == desc._expected_c_value)
-                    this->cas_1(desc._data_address, desc, desc._new_w_value);
+                    cas_1(desc._data_address, desc, desc._new_w_value);
                 else
-                    this->cas_1(desc._data_address, desc, desc._expected_d_value);
+                    cas_1(desc._data_address, desc, desc._expected_d_value);
             }
-            
+
+            static
             inline
-            bool is_descriptor(const rdcss_descriptor& desc) const noexcept
+            constexpr
+            bool is_descriptor(const rdcss_descriptor& desc) noexcept
             {
                 return desc.is_desc;
             }
@@ -137,7 +151,8 @@ namespace crh
         union descriptor_union
         {
         public:
-            using rdcss_descriptor = typename harris_kcas<Allocator, MemReclaimer>::rdcss_descriptor<word_t, addr_t>;
+            using rdcss_descriptor = typename harris_kcas<Allocator, MemReclaimer>
+                ::rdcss_descriptor<word_t, addr_t>;
         
         private:
             state_t _bits;
@@ -147,6 +162,7 @@ namespace crh
             std::unique_ptr<rdcss_descriptor> _descriptor;
 
         public:
+            inline
             descriptor_union() : _bits(0) {}
 
             inline
@@ -161,23 +177,26 @@ namespace crh
             descriptor_union(const rdcss_descriptor& desc) :
                 _descriptor(std::make_unique<rdcss_descriptor>(desc))
             {
-                static_assert(this->is_rdcss(*this));
+                static_assert(is_rdcss(*this));
             }
-
 
             descriptor_union(const descriptor_union&) = default;
             descriptor_union &operator=(const descriptor_union&) = default;
 
             ~descriptor_union() {}
 
+            static
             inline
-            bool is_rdcss(const descriptor_union& desc) const noexcept
+            constexpr
+            bool is_rdcss(const descriptor_union& desc) noexcept
             {
                 return (desc._bits & S_RDCSS_BIT) == S_RDCSS_BIT;
             }
 
+            static
             inline
-            bool is_kcas(const descriptor_union& desc) const noexcept
+            constexpr
+            bool is_kcas(const descriptor_union& desc) noexcept
             {
                 return (desc._bits & S_KCAS_BIT) == S_KCAS_BIT;
             }
@@ -188,7 +207,8 @@ namespace crh
         class entry_payload
         {
         public:
-            using data_location_t = typename harris_kcas<Allocator, MemReclaimer>::descriptor_union<word_t, addr_t>;
+            using data_location_t = typename harris_kcas<Allocator, MemReclaimer>
+                ::descriptor_union<word_t, addr_t>;
 
         private:
             addr_t _addr;
@@ -221,28 +241,31 @@ namespace crh
         class k_cas_descriptor
         {
         public:
-            using entry = typename harris_kcas<Allocator, MemReclaimer>::entry_payload<word_t, addr_t>;
-        
+            using entry_t = typename harris_kcas<Allocator, MemReclaimer>
+                ::entry_payload<word_t, addr_t>;
+
+            using status_t = typename std::atomic<k_cas_descriptor_status>;
+
         private:
-            const unsigned _n;
+            const unsigned _n = 445;
             
-            entry _entry;
+            entry_t _entry;
+            status_t _descriptor_status;
 
             std::atomic<bool> is_desc = {true};
-            std::atomic<k_cas_descriptor_status> _descriptor_status;
 
         public:
             k_cas_descriptor() :
-                _entry(entry()),
-                _descriptor_status(std::atomic<k_cas_descriptor_status>(UNDECIDED)) {}
+                _entry(entry_t()),
+                _descriptor_status(status_t(UNDECIDED)) {}
             
-            k_cas_descriptor(const std::atomic<k_cas_descriptor_status>& desc_status) :
-                _entry(entry()),
+            k_cas_descriptor(const status_t& desc_status) :
+                _entry(entry_t()),
                 _descriptor_status(desc_status) {}
 
             k_cas_descriptor(const word_t& old_val, const word_t& new_val) :
-                _entry(entry(old_val, new_val)),
-                _descriptor_status(std::atomic<k_cas_descriptor_status>(UNDECIDED)) {}
+                _entry(entry_t(old_val, new_val)),
+                _descriptor_status(status_t(UNDECIDED)) {}
             
             k_cas_descriptor(const k_cas_descriptor&) = default;
             k_cas_descriptor &operator=(const k_cas_descriptor_status&) = default;
@@ -262,7 +285,7 @@ namespace crh
                 if (std::atomic_load<word_t>(desc._descriptor_status) == UNDECIDED)
                 {
                     this->_descriptor_status = SUCCESS;
-                    for(unsigned i = 0; i < desc._n; ++i)
+                    for (unsigned i = 0; i < desc._n; ++i)
                     {
                         this->_entry = desc._entry;
                     }
