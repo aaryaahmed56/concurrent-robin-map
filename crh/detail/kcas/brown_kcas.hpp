@@ -9,11 +9,11 @@ namespace crh
      * modified kCAS algorithm as presented 
      * by Brown and Arbel-Raviv
      * 
-     * @tparam Allocator An allocator policy
-     * @tparam MemReclaimer A memory reclaimer policy
+     * @tparam allocator An allocator policy
+     * @tparam mem_reclaimer A memory reclaimer policy
      */
-    template< class Allocator,
-              class MemReclaimer >
+    template< class allocator,
+              class mem_reclaimer >
     class brown_kcas
     {
     public:

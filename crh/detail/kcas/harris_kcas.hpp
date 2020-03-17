@@ -8,11 +8,11 @@ namespace crh
     /**
      * @brief Implementation of original kCAS
      * 
-     * @tparam Allocator 
-     * @tparam MemReclaimer 
+     * @tparam allocator 
+     * @tparam mem_reclaimer 
      */
-    template< class Allocator,
-              class MemReclaimer >
+    template< class allocator,
+              class mem_reclaimer >
     class harris_kcas
     {
     public:
@@ -151,7 +151,7 @@ namespace crh
         union descriptor_union
         {
         public:
-            using rdcss_descriptor = typename harris_kcas<Allocator, MemReclaimer>
+            using rdcss_descriptor = typename harris_kcas<allocator, mem_reclaimer>
                 ::rdcss_descriptor<word_t, addr_t>;
         
         private:
@@ -207,7 +207,7 @@ namespace crh
         class entry_payload
         {
         public:
-            using data_location_t = typename harris_kcas<Allocator, MemReclaimer>
+            using data_location_t = typename harris_kcas<allocator, mem_reclaimer>
                 ::descriptor_union<word_t, addr_t>;
 
         private:
@@ -241,7 +241,7 @@ namespace crh
         class k_cas_descriptor
         {
         public:
-            using entry_t = typename harris_kcas<Allocator, MemReclaimer>
+            using entry_t = typename harris_kcas<allocator, mem_reclaimer>
                 ::entry_payload<word_t, addr_t>;
 
             using status_t = typename std::atomic<k_cas_descriptor_status>;
