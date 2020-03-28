@@ -69,11 +69,13 @@ namespace crh
             static
             inline
             constexpr
-            word_t cas_1(std::unique_ptr<word_t> a, word_t o, word_t n) noexcept
+            word_t cas_1(word_t a, word_t o, word_t n) noexcept
             {
-                word_t old = a.get();
+                std::unique_ptr<word_t> a_ptr = std::make_unique<word_t>(a);
                 
-                if (old == o) a = std::make_unique<word_t>(n);
+                word_t old = a_ptr.release();
+                
+                if (old == o) a_ptr = std::make_unique<word_t>(n);
                 
                 return old;
             }
@@ -105,12 +107,14 @@ namespace crh
 
             static
             constexpr
-            word_t read(std::unique_ptr<addr_t> addr) noexcept
+            word_t read(addr_t addr) noexcept
             {
+                std::unique_ptr<addr_t> addr_ptr = std::make_unique<addr_t>(addr);
+
                 word_t r;
                 do
                 {
-                    r = std::atomic_load<addr_t>(addr.get());
+                    r = std::atomic_load<addr_t>(addr_ptr.release());
                     if (is_descriptor(r)) complete(r);
                 } while(is_descriptor(r));
                 
