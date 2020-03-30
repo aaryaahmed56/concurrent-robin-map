@@ -17,7 +17,7 @@ namespace backoff
         void operator()() {}
     };
 
-    template< unsigned Max >
+    template< const unsigned max >
     class exponential_backoff
     {
     private:
@@ -35,14 +35,14 @@ namespace backoff
         }
     
     public:
-        static_assert(Max > 0, "maximum must be greater than zero, otherwise there is no backoff policy.");
+        static_assert(max > 0, "maximum must be greater than zero, otherwise there is no backoff policy.");
         void operator()()
         {
             for (unsigned i = 0; i < this->_count; ++i)
             {
                 do_backoff();
             }
-            this->_count = std::min(Max, this->_count * 2);
+            this->_count = std::min(max, this->_count * 2);
         }
     };
 } // namespace backoff
