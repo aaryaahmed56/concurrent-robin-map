@@ -22,7 +22,10 @@ namespace backoff
     {
     private:
         unsigned _count = 1;
-        void do_backoff()
+        
+        static
+        constexpr
+        void do_backoff() noexcept
         {
             #if __x86_64
                 _mm_pause();
@@ -37,7 +40,7 @@ namespace backoff
         {
             for (unsigned i = 0; i < this->_count; ++i)
             {
-                this->do_backoff();
+                do_backoff();
             }
             this->_count = std::min(Max, this->_count * 2);
         }
