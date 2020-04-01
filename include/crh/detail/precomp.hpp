@@ -2,7 +2,6 @@
 #define CRH_PRECOMP_HPP
 
 #include "../util/constraints.hpp"
-#include "../util/forwarding_constructors.hpp"
 #include "../util/policies.hpp"
 #include "../util/utils.hpp"
 

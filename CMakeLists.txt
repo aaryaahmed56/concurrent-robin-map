@@ -12,7 +12,6 @@ target_include_directories(crh INTERFACE
                            "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
 
 list(APPEND headers "${CMAKE_CURRENT_SOURCE_DIR}/include/crh/util/constraints.hpp"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/include/crh/util/forwarding_constructors.hpp"
                     "${CMAKE_CURRENT_SOURCE_DIR}/include/crh/util/policies.hpp"
                     "${CMAKE_CURRENT_SOURCE_DIR}/include/crh/util/utils.hpp"
                     "${CMAKE_CURRENT_SOURCE_DIR}/include/crh/detail/kcas/brown_kcas.hpp"
