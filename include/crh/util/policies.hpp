@@ -1,5 +1,5 @@
-#ifndef CRH_BACKOFF_HPP
-#define CRH_BACKOFF_HPP
+#ifndef CRH_POLICIES_HPP
+#define CRH_POLICIES_HPP
 
 #include <algorithm>
 #if __x86_64
@@ -48,4 +48,4 @@ namespace backoff
 } // namespace backoff
 } // namespace crh
 
-#endif // !CRH_BACKOFF_HPP
+#endif // !CRH_POLICIES_HPP
