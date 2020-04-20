@@ -8,49 +8,49 @@ namespace crh
     /**
      * @brief Implementation of original kCAS
      * 
-     * @tparam allocator 
-     * @tparam mem_reclaimer 
+     * @tparam Allocator 
+     * @tparam MemReclaimer 
      */
-    template< class allocator,
-              class mem_reclaimer >
+    template< class Allocator,
+              class MemReclaimer >
     class harris_kcas
     {
     public:
-        using alloc_t = typename std::size_t;
-        using state_t = typename std::uintptr_t;
+        using alloc_type = typename std::size_t;
+        using state_type = typename std::uintptr_t;
 
-        static constexpr alloc_t S_KCAS_BIT = 0x1, S_RDCSS_BIT = 0x2;
+        static constexpr alloc_type S_KCAS_BIT = 0x1, S_RDCSS_BIT = 0x2;
         
-        static constexpr state_t UNDECIDED = 0, SUCCESS = 1, FAILED = 2;
+        static constexpr state_type UNDECIDED = 0, SUCCESS = 1, FAILED = 2;
 
     private:
         /**
          * @brief General descriptor control for the restricted double
          * compare and single swap method
          * 
-         * @tparam word_t A word of specified bit size
-         * @tparam addr_t A control or data address
+         * @tparam WordType A word of specified bit size
+         * @tparam AddrType A control or data address
          */
-        template< typename word_t,
-              typename addr_t >
+        template< class WordType,
+                  class AddrType >
         class rdcss_descriptor
         {
         private:
-            const word_t _expected_c_value, _expected_d_value, _new_w_value;
+            const WordType _expected_c_value, _expected_d_value, _new_w_value;
             
             std::atomic<bool> is_desc;
             
-            std::unique_ptr<addr_t> _control_address, _data_address;
+            std::unique_ptr<AddrType> _control_address, _data_address;
 
         public:
             inline
             rdcss_descriptor() : is_desc(true) {}
 
             explicit
-            rdcss_descriptor(const addr_t& control_address,
-                const addr_t& data_address) :
-                _control_address(std::make_unique<addr_t>(control_address)),
-                _data_address(std::make_unique<addr_t>(data_address)) {}
+            rdcss_descriptor(const AddrType& control_address,
+                const AddrType& data_address) :
+                _control_address(std::make_unique<AddrType>(control_address)),
+                _data_address(std::make_unique<AddrType>(data_address)) {}
 
             rdcss_descriptor(const rdcss_descriptor&) = default;
             rdcss_descriptor &operator=(const rdcss_descriptor&) = default;
@@ -64,18 +64,18 @@ namespace crh
              * @param a The word to be modified
              * @param o The expected old value
              * @param n The value to be assigned
-             * @return word_t A word of specified bit size
+             * @return WordType A word of specified bit size
              */
             static
             inline
             constexpr
-            word_t cas_1(word_t a, word_t o, word_t n) noexcept
+            WordType cas_1(WordType a, WordType o, WordType n) noexcept
             {
-                std::unique_ptr<word_t> a_ptr = std::make_unique<word_t>(a);
+                std::unique_ptr<WordType> a_ptr = std::make_unique<WordType>(a);
                 
-                word_t old = a_ptr.release();
+                WordType old = a_ptr.release();
                 
-                if (old == o) a_ptr = std::make_unique<word_t>(n);
+                if (old == o) a_ptr = std::make_unique<WordType>(n);
                 
                 return old;
             }
@@ -87,13 +87,13 @@ namespace crh
              * @param desc An descriptor representing the
              * expected and new control and data addresses 
              * and values
-             * @return word_t A word of specified bit size
+             * @return WordType A word of specified bit size
              */
             static
             constexpr
-            word_t rdcss(const rdcss_descriptor& desc) noexcept
+            WordType rdcss(const rdcss_descriptor& desc) noexcept
             {
-                word_t r;
+                WordType r;
 
                 do
                 {
@@ -107,14 +107,14 @@ namespace crh
 
             static
             constexpr
-            word_t read(addr_t addr) noexcept
+            WordType read(AddrType addr) noexcept
             {
-                std::unique_ptr<addr_t> addr_ptr = std::make_unique<addr_t>(addr);
+                std::unique_ptr<AddrType> addr_ptr = std::make_unique<AddrType>(addr);
 
-                word_t r;
+                WordType r;
                 do
                 {
-                    r = std::atomic_load<addr_t>(addr_ptr.release());
+                    r = std::atomic_load<AddrType>(addr_ptr.release());
                     if (is_descriptor(r)) complete(r);
                 } while(is_descriptor(r));
                 
@@ -126,7 +126,7 @@ namespace crh
             constexpr
             void complete(const rdcss_descriptor& desc) noexcept
             {
-                word_t v = std::atomic_load<word_t>(desc._control_address.get());
+                WordType v = std::atomic_load<WordType>(desc._control_address.get());
                 
                 if (v == desc._expected_c_value)
                     cas_1(desc._data_address, desc, desc._new_w_value);
@@ -150,18 +150,18 @@ namespace crh
             FAILED
         };
         
-        template< typename word_t,
-                  typename addr_t >
+        template< typename WordType,
+                  typename AddrType >
         union descriptor_union
         {
         public:
-            using rdcss_descriptor = typename harris_kcas<allocator, mem_reclaimer>
-                ::rdcss_descriptor<word_t, addr_t>;
+            using rdcss_descriptor = typename harris_kcas<Allocator, MemReclaimer>
+                ::rdcss_descriptor<WordType, AddrType>;
         
         private:
-            state_t _bits;
+            state_type _bits;
 
-            word_t _val;
+            WordType _val;
 
             std::unique_ptr<rdcss_descriptor> _descriptor;
 
@@ -171,11 +171,11 @@ namespace crh
 
             inline
             explicit
-            descriptor_union(const state_t& bits) : _bits(bits) {}
+            descriptor_union(const state_type& bits) : _bits(bits) {}
 
             inline
             explicit
-            descriptor_union(const word_t& val) : _val(val) {}
+            descriptor_union(const WordType& val) : _val(val) {}
             
             explicit
             descriptor_union(const rdcss_descriptor& desc) :
@@ -206,33 +206,33 @@ namespace crh
             }
         };
         
-        template< typename word_t,
-                  typename addr_t >
+        template< typename WordType,
+                  typename AddrType >
         class entry_payload
         {
         public:
-            using data_location_t = typename harris_kcas<allocator, mem_reclaimer>
-                ::descriptor_union<word_t, addr_t>;
+            using data_loc_type = typename harris_kcas<Allocator, MemReclaimer>
+                ::descriptor_union<WordType, AddrType>;
 
         private:
-            addr_t _addr;
+            AddrType _addr;
 
-            data_location_t _old_val, _new_val;
+            data_loc_type _old_val, _new_val;
 
-            std::unique_ptr<data_location_t> _data_location;
+            std::unique_ptr<data_loc_type> _data_location;
 
         public:
             entry_payload() :
-                _old_val(data_location_t()),
-                _new_val(data_location_t()),
-                _data_location(std::make_unique<data_location_t>()) {}
+                _old_val(data_loc_type()),
+                _new_val(data_loc_type()),
+                _data_location(std::make_unique<data_loc_type>()) {}
 
             explicit
-            entry_payload(const word_t& old_val,
-                const word_t& new_val) :
-                _old_val(data_location_t(old_val)),
-                _new_val(data_location_t(new_val)),
-                _data_location(std::make_unique<data_location_t>()) {}
+            entry_payload(const WordType& old_val,
+                const WordType& new_val) :
+                _old_val(data_loc_type(old_val)),
+                _new_val(data_loc_type(new_val)),
+                _data_location(std::make_unique<data_loc_type>()) {}
 
             entry_payload(const entry_payload&) = default;
             entry_payload &operator=(const entry_payload&) = default;
@@ -240,13 +240,13 @@ namespace crh
             ~entry_payload() {}
         };
         
-        template< typename word_t,
-                  typename addr_t >
+        template< typename WordType,
+                  typename AddrType >
         class k_cas_descriptor
         {
         public:
-            using entry_t = typename harris_kcas<allocator, mem_reclaimer>
-                ::entry_payload<word_t, addr_t>;
+            using entry_t = typename harris_kcas<Allocator, MemReclaimer>
+                ::entry_payload<WordType, AddrType>;
 
             using status_t = typename std::atomic<k_cas_descriptor_status>;
 
@@ -267,7 +267,7 @@ namespace crh
                 _entry(entry_t()),
                 _descriptor_status(desc_status) {}
 
-            k_cas_descriptor(const word_t& old_val, const word_t& new_val) :
+            k_cas_descriptor(const WordType& old_val, const WordType& new_val) :
                 _entry(entry_t(old_val, new_val)),
                 _descriptor_status(status_t(UNDECIDED)) {}
             
@@ -286,7 +286,7 @@ namespace crh
             inline
             bool kcas(const k_cas_descriptor& desc) const noexcept
             {
-                if (std::atomic_load<word_t>(desc._descriptor_status) == UNDECIDED)
+                if (std::atomic_load<WordType>(desc._descriptor_status) == UNDECIDED)
                 {
                     this->_descriptor_status = SUCCESS;
                     for (unsigned i = 0; i < desc._n; ++i)

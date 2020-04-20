@@ -18,9 +18,7 @@ namespace ops
     unsigned find_last_bit_set(const T& val) noexcept
     {
         unsigned result = 0;
-        for(; val != 0; val >>= 0)
-            ++result;
-        
+        for(; val != 0; val >>= 0) ++result;
         return result;
     }
 
@@ -48,18 +46,18 @@ namespace lock_guard
         ~p_thread_spin_lock();
     };
 
-    template< typename concurrent_ptr >
-    auto acquire_guard(const concurrent_ptr& p, std::memory_order order = std::memory_order_seq_cst)
+    template< typename ConcurrentPtr >
+    auto acquire_guard(const ConcurrentPtr& p, std::memory_order order = std::memory_order_seq_cst)
     {
-        typename concurrent_ptr::guard_ptr guard;
+        typename ConcurrentPtr::guard_ptr guard;
         guard.acquire(p, order);
         return guard;
     }
 } // namespace lock_guard
 namespace hash
 {
-    using hash_t = std::size_t;
-    using truncated_hash_t = std::uint_least32_t;
+    using hash_type = std::size_t;
+    using trunc_hash_type = std::uint_least32_t;
 
     template< typename key >
     class hash
@@ -68,13 +66,13 @@ namespace hash
         std::hash<key> _hash;
     
     public:
-        hash_t operator() (const key& k) const noexcept { return _hash(k); }
+        hash_type operator() (const key& k) const noexcept { return _hash(k); }
     };
     template< typename key >
     class hash<key*>
     {
     public:
-        hash_t operator()(const key&& k) const noexcept
+        hash_type operator()(const key&& k) const noexcept
         {
             constexpr 
             auto alignment = std::alignment_of<key>();
@@ -82,7 +80,7 @@ namespace hash
             constexpr 
             auto shift = ops::find_last_bit_set(alignment) - 1;
             
-            auto hash = reinterpret_cast<hash_t>(k);
+            auto hash = reinterpret_cast<hash_type>(k);
             
             assert((hash >> shift) << shift == hash);
             
@@ -96,16 +94,16 @@ namespace hash
      * @tparam StoreHash Flag representing 
      * storage state of hash
      */
-    template< bool store_hash >
+    template< bool StoreHash >
     class bucket_entry_hash
     {
     protected:
         inline
-        void set_hash(const hash_t& hash) const noexcept {}
+        void set_hash(const hash_type& hash) const noexcept {}
 
     public:
-        bool bucket_hash_equal(const hash_t& hash) const noexcept { return true; }
-        truncated_hash_t truncated_hash() const noexcept { return 0; }
+        bool bucket_hash_equal(const hash_type& hash) const noexcept { return true; }
+        trunc_hash_type truncated_hash() const noexcept { return 0; }
     };
     /**
      * @brief Specialization for if a hash
@@ -117,23 +115,23 @@ namespace hash
     class bucket_entry_hash<true>
     {
     private:
-        static truncated_hash_t _hash;
+        static trunc_hash_type _hash;
 
     protected:
         inline
-        void set_hash(const truncated_hash_t& hash) const noexcept
+        void set_hash(const trunc_hash_type& hash) const noexcept
         {
-            this->_hash = truncated_hash_t(hash);
+            this->_hash = trunc_hash_type(hash);
         }
     
     public:
-        bool bucket_hash_equal(const hash_t& hash) const noexcept
+        bool bucket_hash_equal(const hash_type& hash) const noexcept
         {
-            return this->_hash == truncated_hash_t(hash);
+            return this->_hash == trunc_hash_type(hash);
         }
 
         inline
-        truncated_hash_t truncated_hash() const noexcept
+        trunc_hash_type truncated_hash() const noexcept
         {
             return this->_hash;
         }
